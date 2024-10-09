@@ -1,19 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Verify Email{% endblock %}
 {% block content %}
-<h2>Verify Your Email</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <div>
-        {{ form.email.label }}<br>
-        {{ form.email(size=32) }}
-    </div>
-    <div>
-        {{ form.code.label }}<br>
-        {{ form.code(size=32) }}
-    </div>
-    <div>
-        {{ form.submit() }}
-    </div>
-</form>
+<div class="form-container">
+    <h2>Verify Your Email</h2>
+    <form method="POST" class="form-box">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            <label for="email">{{ form.email.label }}</label>
+            {{ form.email(class_="form-input", size=32) }}
+        </div>
+        <div class="form-group">
+            <label for="code">{{ form.code.label }}</label>
+            {{ form.code(class_="form-input", size=32) }}
+        </div>
+        <div class="form-group">
+            {{ form.submit(class_="form-button") }}
+        </div>
+    </form>
+    
+    <h3>or</h3>
+    <!-- Microsoft SSO Button -->
+    <a href="{{ url_for('login_microsoft') }}" class="sso-button">Verify with Microsoft</a>
+</div>
 {% endblock %}

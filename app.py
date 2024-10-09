@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 import boto3
 from botocore.exceptions import ClientError
+import msal
 import os
 from itsdangerous import URLSafeTimedSerializer
 from flask_wtf import FlaskForm
@@ -22,11 +23,12 @@ class RegistrationForm(FlaskForm):
     first_name = StringField('First Name (Optional)')
     last_name = StringField('Last Name (Optional)')
     password = PasswordField('Password', validators=[
-        InputRequired(),
-        Length(min=8, message='Password must be at least 8 characters long.'),
-        Regexp('^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$',
-               message='Password must contain letters and numbers.')
-    ])
+    InputRequired(),
+    Length(min=8, message='Password must be at least 8 characters long.'),
+    Regexp(r'^(?=.*[A-Za-z])(?=.*\d)', message='Password must contain at least one letter and one number.')
+])
+
+
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
@@ -38,6 +40,16 @@ class VerificationForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email()])
     code = StringField('Verification Code', validators=[InputRequired()])
     submit = SubmitField('Verify')
+
+def _build_msal_app(cache=None):
+    return msal.ConfidentialClientApplication(
+        MICROSOFT_CLIENT_ID, authority=MICROSOFT_AUTHORITY,
+        client_credential=MICROSOFT_CLIENT_SECRET, token_cache=cache)
+
+def _build_auth_url():
+    msal_app = _build_msal_app()
+    return msal_app.get_authorization_request_url(
+        MICROSOFT_SCOPES, redirect_uri=MICROSOFT_REDIRECT_URI)
 
 @app.route('/')
 def home():
@@ -71,8 +83,8 @@ def send_welcome_email(email):
     subject = "Hi, welcome to HAIL"
     body_text = "Welcome to HAIL! Please verify your email."
     try:
-        response = ses_client.send_email(
-            Source='mailtohshaarikh@gmail.com',
+        response = ses.send_email(
+            Source='mailtoshaarikh@gmail.com',
             Destination={'ToAddresses': [email]},
             Message={
                 'Subject': {'Data': subject},
@@ -80,7 +92,9 @@ def send_welcome_email(email):
             }
         )
     except ClientError as e:
-        print(f"Failed to send email: {e.response['Error']['Message']}")
+        error_message = e.response['Error']['Message']
+        flash(f"Failed to send email: {error_message}", 'danger')
+        print(f"Failed to send email: {error_message}")
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
@@ -117,6 +131,27 @@ def login():
         except ClientError as e:
             flash(e.response['Error']['Message'], 'danger')
     return render_template('login.html', form=form)
+
+@app.route('/login/microsoft')
+def login_microsoft():
+    auth_url = _build_auth_url()
+    return redirect(auth_url)
+
+@app.route('/login/microsoft/authorized')
+def authorized_microsoft():
+    if 'code' in request.args:
+        msal_app = _build_msal_app()
+        token_response = msal_app.acquire_token_by_authorization_code(
+            request.args['code'], scopes=MICROSOFT_SCOPES, redirect_uri=MICROSOFT_REDIRECT_URI)
+        
+        if 'access_token' in token_response:
+            session['user'] = token_response.get('id_token_claims')
+            flash('Logged in successfully with Microsoft!', 'success')
+            return redirect(url_for('welcome'))
+        else:
+            flash('Microsoft login failed. Please try again.', 'danger')
+            return redirect(url_for('login'))
+    return redirect(url_for('login'))
 
 @app.route('/welcome')
 def welcome():

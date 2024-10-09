@@ -1,19 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block content %}
-<h2>Login</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <div>
-        {{ form.email.label }}<br>
-        {{ form.email(size=32) }}
-    </div>
-    <div>
-        {{ form.password.label }}<br>
-        {{ form.password(size=32) }}
-    </div>
-    <div>
-        {{ form.submit() }}
-    </div>
-</form>
+<div class="form-container">
+    <h2>Login</h2>
+    <form method="POST" class="form-box">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.email(class_="form-input", size=32, placeholder="Email") }}
+        </div>
+        <div class="form-group">
+            {{ form.password(class_="form-input", size=32, placeholder="Password") }}
+        </div>
+        <div class="form-group">
+            {{ form.submit(class_="form-button") }}
+        </div>
+    </form>
+    <div class="hr-lines">
+        <hr class="hr-line-left">
+        <p class="text-center">or</p>
+        <hr class="hr-line-right">
+    </div>    
+    <!-- Microsoft SSO Button -->
+    <a href="{{ url_for('login_microsoft') }}" class="sso-button">Login with Microsoft</a>
+</div>
 {% endblock %}

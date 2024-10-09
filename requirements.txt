@@ -1,1 +1,4 @@
 flask
+msal
+boto3
+flask-wtf

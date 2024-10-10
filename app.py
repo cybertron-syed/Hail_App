@@ -7,13 +7,16 @@ from itsdangerous import URLSafeTimedSerializer
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Email, Length, Regexp
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-COGNITO_USER_POOL_ID = 'ap-southeast-2_MbU7EHVEA'
-COGNITO_CLIENT_ID = '3salrpen1hpc9lpivaqnkgst3n' 
-AWS_REGION = 'ap-southeast-2'
+COGNITO_USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
+COGNITO_CLIENT_ID = os.getenv('COGNITO_CLIENT_ID')
+AWS_REGION = os.getenv('AWS_REGION')
 
 cognito = boto3.client('cognito-idp', region_name=AWS_REGION)
 ses = boto3.client('ses', region_name=AWS_REGION)

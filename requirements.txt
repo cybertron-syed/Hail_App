@@ -2,3 +2,5 @@ flask
 msal
 boto3
 flask-wtf
+email_validator
+python-dotenv

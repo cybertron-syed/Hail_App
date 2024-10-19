@@ -2,31 +2,34 @@
 {% block title %}Register{% endblock %}
 {% block content %}
 <div class="form-container">
-    <h2>Register</h2>
+    <h2>REGISTER</h2>
     <form method="POST" class="form-box">
         {{ form.hidden_tag() }}
         <div class="form-group">
-            {{ form.email(class_="form-input", size=32, placeholder="Email") }}
+            {{ form.email(class_="form-input", size=32, placeholder="Email", required=true) }}
         </div>
         <div class="form-group">
-            {{ form.first_name(class_="form-input", size=32, placeholder="First Name (Optional)") }}
+            {{ form.first_name(class_="form-input", size=32, placeholder="First Name", required=true) }}
         </div>
         <div class="form-group">
-            {{ form.last_name(class_="form-input", size=32, placeholder="Last Name (Optional)") }}
+            {{ form.last_name(class_="form-input", size=32, placeholder="Last Name", required=true) }}
         </div>
-        <div class="form-group">
-            {{ form.password(class_="form-input", size=32, placeholder="Password") }}
-        </div>
+
+        <div class="form-group password-group">
+            {{ form.password(class_="form-input", size=32, placeholder="Password", required=True, id="password") }}
+            <div id="password-rules" class="password-rules hidden">
+                <img src="https://img.icons8.com/?size=100&id=P7N90lIvNYPd&format=png&color=FF0000" 
+                     class="info-icon" alt="Info Icon" />
+                <span class="guideline-text">
+                    Password must be at least 8 characters long and include at least one Upper letter, one number and any symbol.
+                </span>
+            </div>
+        </div>        
+
         <div class="form-group">
             {{ form.submit(class_="form-button") }}
         </div>
     </form>
-    <div class="hr-lines">
-        <hr class="hr-line-left">
-        <p class="text-center">or</p>
-        <hr class="hr-line-right">
-    </div>    
-    <!-- Microsoft SSO Button -->
-    <a href="{{ url_for('login_microsoft') }}" class="sso-button">Login with Microsoft</a>
+
 </div>
 {% endblock %}

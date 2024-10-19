@@ -2,7 +2,7 @@
 {% block title %}Login{% endblock %}
 {% block content %}
 <div class="form-container">
-    <h2>Login</h2>
+    <h2>LOGIN</h2>
     <form method="POST" class="form-box">
         {{ form.hidden_tag() }}
         <div class="form-group">
@@ -15,12 +15,6 @@
             {{ form.submit(class_="form-button") }}
         </div>
     </form>
-    <div class="hr-lines">
-        <hr class="hr-line-left">
-        <p class="text-center">or</p>
-        <hr class="hr-line-right">
-    </div>    
-    <!-- Microsoft SSO Button -->
-    <a href="{{ url_for('login_microsoft') }}" class="sso-button">Login with Microsoft</a>
+    <a href="{{ url_for('forgot_password')}}"><h3>Forgot Password</h3></a>
 </div>
 {% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Reset{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2>RESET PASSWORD</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(class_="form-input", placeholder="Enter your email") }}
+        </div>
+        <div class="form-group">
+            {{ form.submit(class_="form-button") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

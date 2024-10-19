@@ -26,12 +26,10 @@ class RegistrationForm(FlaskForm):
     first_name = StringField('First Name (Optional)')
     last_name = StringField('Last Name (Optional)')
     password = PasswordField('Password', validators=[
-    InputRequired(),
-    Length(min=8, message='Password must be at least 8 characters long.'),
-    Regexp(r'^(?=.*[A-Za-z])(?=.*\d)', message='Password must contain at least one letter and one number.')
-])
-
-
+        InputRequired(),
+        Length(min=8, message='Password must be at least 8 characters long.'),
+        Regexp(r'^(?=.*[A-Za-z])(?=.*\d)', message='Password must contain at least one letter and one number.')
+    ])
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
@@ -44,15 +42,19 @@ class VerificationForm(FlaskForm):
     code = StringField('Verification Code', validators=[InputRequired()])
     submit = SubmitField('Verify')
 
-def _build_msal_app(cache=None):
-    return msal.ConfidentialClientApplication(
-        MICROSOFT_CLIENT_ID, authority=MICROSOFT_AUTHORITY,
-        client_credential=MICROSOFT_CLIENT_SECRET, token_cache=cache)
+class ResetForm(FlaskForm):
+    email = StringField('Email', validators=[InputRequired(), Email()])
+    submit = SubmitField('Submit')
 
-def _build_auth_url():
-    msal_app = _build_msal_app()
-    return msal_app.get_authorization_request_url(
-        MICROSOFT_SCOPES, redirect_uri=MICROSOFT_REDIRECT_URI)
+class ConfirmResetPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[InputRequired(), Email()])
+    code = StringField('Reset Code', validators=[InputRequired()])
+    new_password = PasswordField('New Password', validators=[
+        InputRequired(),
+        Length(min=8, message='Password must be at least 8 characters long.'),
+        Regexp(r'^(?=.*[A-Za-z])(?=.*\d)', message='Password must contain at least one letter and one number.')
+    ])
+    submit = SubmitField('Reset Password')
 
 @app.route('/')
 def home():
@@ -74,7 +76,6 @@ def register():
                     {'Name': 'family_name', 'Value': form.last_name.data or ''}
                 ]
             )
-
             send_welcome_email(form.email.data)
             flash('Registration successful! Please check your email for the verification code.', 'success')
             return redirect(url_for('verify'))
@@ -97,7 +98,6 @@ def send_welcome_email(email):
     except ClientError as e:
         error_message = e.response['Error']['Message']
         flash(f"Failed to send email: {error_message}", 'danger')
-        print(f"Failed to send email: {error_message}")
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
@@ -114,6 +114,39 @@ def verify():
         except ClientError as e:
             flash(e.response['Error']['Message'], 'danger')
     return render_template('verify.html', form=form)
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ResetForm() 
+    if form.validate_on_submit():
+        try:
+            response = cognito.forgot_password(
+                ClientId=COGNITO_CLIENT_ID,
+                Username=form.email.data,
+            )
+            send_reset_email(form.email.data)
+            flash('A reset code has been sent to your email.', 'success')
+            return redirect(url_for('confirm_reset_password', email=form.email.data))
+        except ClientError as e:
+            flash(e.response['Error']['Message'], 'danger')
+    return render_template('reset.html', form=form)
+
+@app.route('/confirm_reset_password', methods=['GET', 'POST'])
+def confirm_reset_password():
+    form = ConfirmResetPasswordForm()  
+    if form.validate_on_submit():
+        try:
+            response = cognito.confirm_forgot_password(
+                ClientId=COGNITO_CLIENT_ID,
+                Username=form.email.data,
+                ConfirmationCode=form.code.data,  
+                Password=form.new_password.data  
+            )
+            flash('Your password has been reset successfully.', 'success')
+            return redirect(url_for('login'))
+        except ClientError as e:
+            flash(e.response['Error']['Message'], 'danger')
+    return render_template('confirm_reset_password.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -135,28 +168,7 @@ def login():
             flash(e.response['Error']['Message'], 'danger')
     return render_template('login.html', form=form)
 
-@app.route('/login/microsoft')
-def login_microsoft():
-    auth_url = _build_auth_url()
-    return redirect(auth_url)
-
-@app.route('/login/microsoft/authorized')
-def authorized_microsoft():
-    if 'code' in request.args:
-        msal_app = _build_msal_app()
-        token_response = msal_app.acquire_token_by_authorization_code(
-            request.args['code'], scopes=MICROSOFT_SCOPES, redirect_uri=MICROSOFT_REDIRECT_URI)
-        
-        if 'access_token' in token_response:
-            session['user'] = token_response.get('id_token_claims')
-            flash('Logged in successfully with Microsoft!', 'success')
-            return redirect(url_for('welcome'))
-        else:
-            flash('Microsoft login failed. Please try again.', 'danger')
-            return redirect(url_for('login'))
-    return redirect(url_for('login'))
-
-@app.route('/welcome')
+@app.route('/welcome', methods=['GET', 'POST'])
 def welcome():
     if 'user' in session:
         return render_template('welcome.html', user=session['user'])

@@ -8,10 +8,13 @@
 </head>
 <body>
     <header>
-        <h1>HAIL</h1>
+        <div class="logo-container">
+          <img src="{{ url_for('static', filename='images/harmonia logo.jpg') }}" alt="Logo" class="logo">
+          <h3>Harmonia Applied Innovation Lab (HAIL) </h3>
+      </div>
         <nav>
-            <a href="{{ url_for('register') }}">Register</a>
-            <a href="{{ url_for('login') }}">Login</a>
+              <a href="{{ url_for('register') }}">Register</a>
+              <a href="{{ url_for('login') }}">Login</a>
         </nav>
     </header>
     <main>
@@ -24,5 +27,23 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+          const passwordInput = document.getElementById('password');
+          const passwordRules = document.getElementById('password-rules');
+  
+          passwordInput.addEventListener('focus', function () {
+              passwordRules.classList.remove('hidden');
+              passwordRules.classList.add('visible');
+          });
+  
+          passwordInput.addEventListener('blur', function () {
+              passwordRules.classList.remove('visible');
+              passwordRules.classList.add('hidden');
+          });
+      });
+  </script>
+  
 </body>
 </html>

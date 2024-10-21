@@ -1,22 +1,38 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
-import boto3
-from botocore.exceptions import ClientError
-import msal
 import os
+import boto3
+import json
+from flask import Flask, render_template, redirect, url_for, request, session, flash
+from botocore.exceptions import ClientError
 from itsdangerous import URLSafeTimedSerializer
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Email, Length, Regexp
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-COGNITO_USER_POOL_ID = os.getenv('COGNITO_USER_POOL_ID')
-COGNITO_CLIENT_ID = os.getenv('COGNITO_CLIENT_ID')
-AWS_REGION = os.getenv('AWS_REGION')
+
+def get_secret():
+    secret_name = "test/nono"  
+    region_name = "ap-southeast-2"  
+
+    session = boto3.session.Session()
+    client = session.client(service_name='secretsmanager', region_name=region_name)
+    
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+    except ClientError as e:
+        raise e
+    secret = get_secret_value_response['SecretString']
+    return json.loads(secret)
+
+secrets = get_secret()
+COGNITO_USER_POOL_ID = secrets['COGNITO_USER_POOL_ID']
+COGNITO_CLIENT_ID = secrets['COGNITO_CLIENT_ID']
+AWS_REGION = secrets['AWS_REGION']
 
 cognito = boto3.client('cognito-idp', region_name=AWS_REGION)
 ses = boto3.client('ses', region_name=AWS_REGION)
@@ -124,7 +140,7 @@ def forgot_password():
                 ClientId=COGNITO_CLIENT_ID,
                 Username=form.email.data,
             )
-            send_reset_email(form.email.data)
+            send_welcome_email(form.email.data)
             flash('A reset code has been sent to your email.', 'success')
             return redirect(url_for('confirm_reset_password', email=form.email.data))
         except ClientError as e:

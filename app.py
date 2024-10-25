@@ -7,8 +7,8 @@ from itsdangerous import URLSafeTimedSerializer
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Email, Length, Regexp
-# from dotenv import load_dotenv
 
+# from dotenv import load_dotenv
 # load_dotenv()
 
 app = Flask(__name__)
@@ -16,8 +16,8 @@ app.secret_key = os.urandom(24)
 
 
 def get_secret():
-    secret_name = "test/nono"  
-    region_name = "ap-southeast-2"  
+    secret_name = "aws/test"
+    region_name = "us-east-1"
 
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region_name)
@@ -35,7 +35,6 @@ COGNITO_CLIENT_ID = secrets['COGNITO_CLIENT_ID']
 AWS_REGION = secrets['AWS_REGION']
 
 cognito = boto3.client('cognito-idp', region_name=AWS_REGION)
-ses = boto3.client('ses', region_name=AWS_REGION)
 
 class RegistrationForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email()])
@@ -92,28 +91,11 @@ def register():
                     {'Name': 'family_name', 'Value': form.last_name.data or ''}
                 ]
             )
-            send_welcome_email(form.email.data)
             flash('Registration successful! Please check your email for the verification code.', 'success')
             return redirect(url_for('verify'))
         except ClientError as e:
             flash(e.response['Error']['Message'], 'danger')
     return render_template('register.html', form=form)
-
-def send_welcome_email(email):
-    subject = "Hi, welcome to HAIL"
-    body_text = "Welcome to HAIL! Please verify your email."
-    try:
-        response = ses.send_email(
-            Source='mailtoshaarikh@gmail.com',
-            Destination={'ToAddresses': [email]},
-            Message={
-                'Subject': {'Data': subject},
-                'Body': {'Text': {'Data': body_text}}
-            }
-        )
-    except ClientError as e:
-        error_message = e.response['Error']['Message']
-        flash(f"Failed to send email: {error_message}", 'danger')
 
 @app.route('/verify', methods=['GET', 'POST'])
 def verify():
@@ -140,7 +122,6 @@ def forgot_password():
                 ClientId=COGNITO_CLIENT_ID,
                 Username=form.email.data,
             )
-            send_welcome_email(form.email.data)
             flash('A reset code has been sent to your email.', 'success')
             return redirect(url_for('confirm_reset_password', email=form.email.data))
         except ClientError as e:

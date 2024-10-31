@@ -9,27 +9,68 @@
             {{ form.email(class_="form-input", size=32, placeholder="Email", required=true) }}
         </div>
         <div class="form-group">
-            {{ form.first_name(class_="form-input", size=32, placeholder="First Name", required=true) }}
+            {{ form.first_name(class_="form-input", size=32, placeholder="First Name") }}
         </div>
         <div class="form-group">
-            {{ form.last_name(class_="form-input", size=32, placeholder="Last Name", required=true) }}
+            {{ form.last_name(class_="form-input", size=32, placeholder="Last Name") }}
         </div>
-
         <div class="form-group password-group">
-            {{ form.password(class_="form-input", size=32, placeholder="Password", required=True, id="password") }}
+            {{ form.password(class_="form-input", size=32, placeholder="Password", required=true, id="password") }}
             <div id="password-rules" class="password-rules hidden">
                 <img src="https://img.icons8.com/?size=100&id=P7N90lIvNYPd&format=png&color=FF0000" 
                      class="info-icon" alt="Info Icon" />
                 <span class="guideline-text">
-                    Password must be at least 8 characters long and include at least one Upper letter, one number and any symbol.
+                    Password must be at least 8 characters long and include at least one uppercase letter, one number, and a symbol.
                 </span>
             </div>
-        </div>        
+        </div>
+
+        <div class="form-group">
+            <input type="checkbox" id="terms" required>
+            <label for="terms">I agree to the <a href="/terms" target="_blank">Terms and Conditions</a></label>
+        </div>
 
         <div class="form-group">
             {{ form.submit(class_="form-button") }}
         </div>
     </form>
-
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const passwordRules = document.getElementById('password-rules');
+
+        if (passwordInput) {
+            passwordInput.addEventListener('focus', function () {
+                passwordRules.classList.remove('hidden');
+                passwordRules.classList.add('visible');
+            });
+
+            passwordInput.addEventListener('blur', function () {
+                if (passwordRules.classList.contains('visible') && passwordRules.classList.contains('valid')) {
+                    passwordRules.classList.remove('visible');
+                    passwordRules.classList.add('hidden');
+                }
+            });
+
+            passwordInput.addEventListener("input", function() {
+                const password = this.value;
+
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasNumber = /\d/.test(password);
+                const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+                const isLongEnough = password.length >= 8;
+
+                if (hasUpperCase && hasNumber && hasSymbol && isLongEnough) {
+                    passwordRules.classList.add("hidden");
+                    passwordRules.classList.add("valid");
+                } else {
+                    passwordRules.classList.remove("hidden");
+                    passwordRules.classList.remove("valid");
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

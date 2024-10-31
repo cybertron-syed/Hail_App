@@ -27,23 +27,6 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </main>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-          const passwordInput = document.getElementById('password');
-          const passwordRules = document.getElementById('password-rules');
-  
-          passwordInput.addEventListener('focus', function () {
-              passwordRules.classList.remove('hidden');
-              passwordRules.classList.add('visible');
-          });
-  
-          passwordInput.addEventListener('blur', function () {
-              passwordRules.classList.remove('visible');
-              passwordRules.classList.add('hidden');
-          });
-      });
-  </script>
   
 </body>
 </html>

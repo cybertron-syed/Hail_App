@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
+{% block body_class %}no-padding{% endblock %}
 {% block content %}
 <div class="form-container">
     <h2>LOGIN</h2>
@@ -16,5 +17,12 @@
         </div>
     </form>
     <a href="{{ url_for('forgot_password')}}"><h3>Forgot Password</h3></a>
+
 </div>
+
+<footer class="disclaimer">
+    <p><strong>Disclaimer:</strong> Enter at your own risk. Users cannot hold us liable for any losses or damages incurred.</p>
+</footer>
+
+
 {% endblock %}

@@ -16,8 +16,11 @@ app.secret_key = os.urandom(24)
 
 
 def get_secret():
-    secret_name = "aws/test"
-    region_name = "us-east-1"
+    #secret_name = "test/nono" #test
+    #region_name = "ap-southeast-2" #test
+
+    secret_name = "test/hail" #prod
+    region_name = "us-east-1" #prod
 
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region_name)
@@ -91,6 +94,8 @@ def register():
                     {'Name': 'family_name', 'Value': form.last_name.data or ''}
                 ]
             )
+            session['first_name'] = form.first_name.data
+            session['last_name'] = form.last_name.data
             flash('Registration successful! Please check your email for the verification code.', 'success')
             return redirect(url_for('verify'))
         except ClientError as e:
@@ -158,7 +163,14 @@ def login():
                     'PASSWORD': form.password.data
                 }
             )
+            user_info = cognito.admin_get_user(  
+                UserPoolId=COGNITO_USER_POOL_ID,
+                Username=form.email.data
+            )
             session['user'] = form.email.data
+            session['first_name'] = next((attr['Value'] for attr in user_info['UserAttributes'] if attr['Name'] == 'given_name'), 'User')
+            session['last_name'] = next((attr['Value'] for attr in user_info['UserAttributes'] if attr['Name'] == 'family_name'), '')
+
             flash('Logged in successfully!', 'success')
             return redirect(url_for('welcome'))
         except ClientError as e:
@@ -168,7 +180,9 @@ def login():
 @app.route('/welcome', methods=['GET', 'POST'])
 def welcome():
     if 'user' in session:
-        return render_template('welcome.html', user=session['user'])
+        first_name = session.get('first_name', 'User')
+        last_name = session.get('last_name', '')
+        return render_template('welcome.html', first_name=first_name, last_name=last_name)
     else:
         flash('Please log in first.', 'warning')
         return redirect(url_for('login'))

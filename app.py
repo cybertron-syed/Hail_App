@@ -16,11 +16,11 @@ app.secret_key = os.urandom(24)
 
 
 def get_secret():
-    #secret_name = "test/nono" #test
-    #region_name = "ap-southeast-2" #test
+    secret_name = "test/nono" #test
+    region_name = "ap-southeast-2" #test
 
-    secret_name = "test/hail" #prod
-    region_name = "us-east-1" #prod
+    #secret_name = "test/hail" #prod
+    #region_name = "us-east-1" #prod
 
     session = boto3.session.Session()
     client = session.client(service_name='secretsmanager', region_name=region_name)
